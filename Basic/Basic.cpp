@@ -186,7 +186,7 @@ void Code::InputInterpretation(string expression, int num)//после строки обязате
 	}
 }
 
-void Code::PrintInterpretation(string expression, int num)//в будущем функция интерпретации Print'a, пока просто протестировать input
+void Code::PrintInterpretation(string expression, int num)
 {
 	cout << vars["A"] << " " << vars["D"] << " " << vars["G"] << endl;
 }
