@@ -121,7 +121,7 @@ void Code::IsAlphabet(char* str)//все переменные - комбинации с большой буквы
 	}
 }
 
-void Code::InputInterpretation(string expression, int num)//после строки обязательно ; и переменная
+void Code::InputInterpretation(string expression)//после строки обязательно ; и переменная
 {
 	int pos;
 	char buffer[255];
@@ -137,21 +137,21 @@ void Code::InputInterpretation(string expression, int num)//после строки обязате
 			{
 				expression.copy(buffer, pos);
 				buffer[pos] = '\0';
-				cout << buffer << endl;
+				cout << buffer;
 				expression.erase(0, pos + 1);
 				flagOfString += 1;
 			}
 			else
 			{
-				cout << "ERROR IN LINE " << (num + 1) * 10 << ": NOT FOUND END OF STRING" << endl;
+				cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": NOT FOUND END OF STRING" << endl;
 				error = NOT_FOUND_END_OF_STRING;
 				return;
 			}
 		}
-		if ((expression[0] <= 'Z' && expression[0] >= 'A') && flagOfString == 1)
+		if (!(expression.empty()) && (expression[0] != ';') && flagOfString == 1)
 		{
 			error = SYNTAX_ERROR;
-			cout << "ERROR IN LINE " << (num + 1) * 10 << ": NOT FOUND ';' AFTER STRING" << endl;
+			cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": NOT FOUND ';' AFTER STRING" << endl;
 			return;
 		}
 		if ((expression[0] == ';' && flagOfString <= 1) || (expression[0] <= 'Z' && expression[0] >= 'A'))//может не быть строки-приглашения, а может быть
@@ -172,7 +172,7 @@ void Code::InputInterpretation(string expression, int num)//после строки обязате
 			IsAlphabet(buffer);
 			if (error == INVALID_NAME_OF_VARIABLE)
 			{
-				cout << "ERROR IN LINE " << (num + 1) * 10 << ": INVALID NAME OF VARIABLE" << endl;
+				cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": INVALID NAME OF VARIABLE" << endl;
 				return;
 			}
 			else
@@ -186,60 +186,142 @@ void Code::InputInterpretation(string expression, int num)//после строки обязате
 	}
 }
 
-void Code::PrintInterpretation(string expression, int num)
+void Code::PrintInterpretation(string expression)
 {
-	cout << vars["A"] << " " << vars["D"] << " " << vars["G"] << endl;
+	int pos;
+	char buffer[255];
+	string curString;
+	int flagOfString = 0;
+	while (!expression.empty())
+	{
+		flagOfString = 0;
+		if (expression[0] == '"')
+		{
+			expression.erase(0, 1);
+			pos = expression.find('"');
+			if (pos != -1)
+			{
+				expression.copy(buffer, pos);
+				buffer[pos] = '\0';
+				cout << buffer;
+				expression.erase(0, pos + 1);
+				flagOfString += 1;
+			}
+			else
+			{
+				cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": NOT FOUND END OF STRING" << endl;
+				error = NOT_FOUND_END_OF_STRING;
+				return;
+			}
+		}
+		if (!(expression.empty()) && (expression[0] != ';') && flagOfString == 1)
+		{
+			error = SYNTAX_ERROR;
+			cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": NOT FOUND ';' AFTER STRING" << endl;
+			return;
+		}
+		if ((expression[0] == ';' && flagOfString <= 1) || (expression[0] <= 'Z' && expression[0] >= 'A'))//может не быть строки-приглашения, а может быть
+		{
+			if (expression[0] == ';')
+				expression.erase(0, 1);
+			pos = expression.find(";");//рассмотри случай когда после переменной идет строка и потеряна ;
+			if (pos != -1)//если переменная не одна
+			{
+				expression.copy(buffer, pos);
+				buffer[pos] = '\0';
+			}
+			else
+			{
+				expression.copy(buffer, expression.size());
+				buffer[expression.size()] = '\0';
+			}
+			IsAlphabet(buffer);
+			if (error == INVALID_NAME_OF_VARIABLE)
+			{
+				cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": INVALID NAME OF VARIABLE" << endl;
+				return;
+			}
+			else
+			{
+				curString = string(buffer);
+				if (varsInit[curString] == 1)
+					cout << vars[curString];
+				else
+				{
+					error = UNDEFINED_VARIABLE;
+					cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": UNDEFINED VARIABLE" << endl;
+					return;
+				}
+				if (pos != -1)//в инпуте можно обработать ошибку связанную с двойными строками таким образом, так как при удалении остается точка с запятой
+					expression.erase(0, curString.size() + 1);
+				else
+					expression.erase(0, curString.size());
+			}
+		}
+	}
+}
+
+void Code::GoToInterpretation(string expression)
+{
+	char buf[20];
+	expression.copy(buf, expression.size());
+	buf[expression.size()] = '\0';
+	int curLine = atoi(buf);
+	if (line.size() * 10 < curLine || curLine < 0 || curLine % 10 != 0)
+	{
+		error = GOTO_ERROR;
+		cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": UNDEFINED NUMBER OF STRING" << endl;
+		return;
+	}
+	else
+		numOfCurLine = int(curLine / 10 - 1); 
 }
 
 void Code::Interpretation()
 {
 	string curString;
-	int i = 0;
-	while (line[i].statement != END)
+	numOfCurLine = 0;
+	while (line[numOfCurLine].statement != END)
 	{
-		curString = line[i].expression; //чтобы не портить исходные строки в процессе интерпретации
-		switch (line[i].statement)
+		curString = line[numOfCurLine].expression; //чтобы не портить исходные строки в процессе интерпретации
+		switch (line[numOfCurLine].statement)
 		{
 		case PRINT:
 		{
-			PrintInterpretation(curString, i);
-			i++;
+			PrintInterpretation(curString);
+			cout << endl;
+			numOfCurLine++;
 			break;
 		}
 		case INPUT:
 		{
-			InputInterpretation(curString, i);
-			i++;
+			InputInterpretation(curString);
+			numOfCurLine++;
 			break;
 		}
 		case IF:
 		{
-			i++;
+			numOfCurLine++;
 			break;
 		}
 		case GOTO:
 		{
-			i++;
+			GoToInterpretation(curString);
 			break;
 		}
 		case GOSUB:
 		{
-			i++;
+			numOfCurLine++;
 			break;
 		}
 		case RETURN:
 		{
-			i++;
-			break;
-		}
-		case END:
-		{
-			i++;
+			numOfCurLine++;
 			break;
 		}
 		default:
 		{
-			i++;
+			numOfCurLine++;
 			break;
 		}
 		}

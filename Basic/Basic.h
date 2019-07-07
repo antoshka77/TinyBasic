@@ -23,7 +23,9 @@ typedef enum Errors
 	SUCCESS,
 	NOT_FOUND_END_OF_STRING,
 	INVALID_NAME_OF_VARIABLE, 
-	SYNTAX_ERROR
+	SYNTAX_ERROR,
+	UNDEFINED_VARIABLE,
+	GOTO_ERROR
 }Errors;
 
 typedef struct Str
@@ -39,10 +41,12 @@ private:
 	vector <Str> line;
 	map <string, int> vars;
 	map <string, int> varsInit;
-	void InputInterpretation(string expression, int num);
-	void PrintInterpretation(string expression, int num);
+	void InputInterpretation(string expression);
+	void PrintInterpretation(string expression);
+	void GoToInterpretation(string expression);
 	void IsAlphabet(char* str);
 	Errors error = SUCCESS;
+	int numOfCurLine;
 public:
 	void GetCode();
 	void PrintCode();
