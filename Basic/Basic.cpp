@@ -321,9 +321,212 @@ void Code::Interpretation()
 		}
 		default:
 		{
+			ReversePolishEntry(curString);
+			cout << EvaluatePolish() << endl;
 			numOfCurLine++;
 			break;
 		}
 		}
 	}
+}
+
+int Code::IsItNum(char symb)
+{
+	return (symb >= '0' && symb <= '9') ? 1 : 0;
+}
+
+int Code::IsItSymb(char symb)
+{
+	return (symb >= 'A' && symb <= 'Z') ? 1 : 0;
+}
+
+int Code::IsItFunc(char symb)
+{
+	return (symb == '+' || symb == '-' || symb == '*' || symb == '/') ? 1 : 0;
+}
+
+int Code::atoi(string str)
+{
+	int num = 0;
+	int flag = 0;
+	for (int i = 0; i < str.length(); i++)
+		num = num * 10 + str[i] - 0x30;
+	return num;
+}
+
+int Priority(char symb)
+{
+	switch (symb)
+	{
+	case '*':
+		return 2;
+	case '/':
+		return 2;
+	case '-':
+		return 1;
+	case '+':
+		return 1;
+	default:
+		return 0;
+	}
+}
+
+int Code::IsAlphabet(string str)//все переменные - комбинации с большой буквы
+{
+	int flag = 1;
+	for (int i = 0; i < str.size(); i++)
+	{
+		if (str[i] > 'Z' || str[i] < 'A')
+		{
+			flag = 0;
+			return flag;
+		}
+		i++;
+	}
+	return flag;
+}
+
+int Code::IsNumber(string str)
+{
+	int flag = 1;
+	for (int i = 0; i < str.size(); i++)
+	{
+		if (str[i] > '9' || str[i] < '0')
+		{
+			flag = 0;
+			return flag;
+		}
+		i++;
+	}
+	return flag;
+}
+
+void Code::ReversePolishEntry(string mystring)
+{
+	int i = 0;
+	string buf;
+	int countBuf = 1;
+	int countStack = 0;
+	int flag = 1;
+	string nullstr = "0";
+	int shift = mystring.size();
+	while (shift != -1)
+	{
+		if (IsItNum(mystring[i]) == 1 || IsItSymb(mystring[i]) == 1)
+		{
+			countBuf++;
+			buf.push_back(mystring[i]);
+		}
+		else
+		{
+			if (countBuf != 1)
+			{
+				if (IsAlphabet(buf))
+				{
+					if (varsInit[buf] == 1)
+					{
+						curElem.result.number = vars[buf];
+						curElem.type = number;
+						poli.push_back(curElem);
+					}
+					else
+					{
+						error = UNDEFINED_VARIABLE;
+						return;
+					}
+				}
+				else
+				{
+					if (IsNumber(buf))
+					{
+						curElem.result.number = atoi(buf);
+						curElem.type = number;
+						poli.push_back(curElem);
+					}
+					else
+					{
+						error = INVALID_NAME_OF_VARIABLE;
+						return;
+					}
+				}
+			}
+			countBuf = 1;
+			buf.erase(0, buf.size());
+			if (mystring[i] == '(')
+				stack.push_back(mystring[i]);
+			if (IsItFunc(mystring[i]) == 1)
+			{
+				if (!stack.empty())
+				{
+					while (Priority(mystring[i]) <= Priority(stack[stack.size() - 1]))
+					{
+						curElem.result.func = stack[stack.size() - 1];
+						curElem.type = func;
+						poli.push_back(curElem);
+						stack.pop_back();
+						if (stack.empty())
+							break;
+					}
+				}
+				stack.push_back(mystring[i]);
+			}
+			if (mystring[i] == ')')
+			{
+				while (stack[stack.size() - 1] != '(')
+				{
+					curElem.result.func = stack[stack.size() - 1];
+					curElem.type = func;
+					poli.push_back(curElem);
+					stack.pop_back();
+				}
+				stack.pop_back();
+			}
+		}
+		i++;
+		shift--;
+	}
+	while (!stack.empty())
+	{
+		curElem.result.func = stack[stack.size() - 1];
+		curElem.type = func;
+		poli.push_back(curElem);
+		stack.pop_back();
+	}
+}
+
+int Code::EvaluatePolish()
+{
+	if (error != SUCCESS)
+	{
+		cout << "ERROR OF EVALUATE" << endl;
+		return -1;
+	}
+	for (int i = 0; i < poli.size(); i++)
+	{
+		if (poli[i].type == number)
+			stack_p.push_back(poli[i].result.number);
+		if (poli[i].type == 1)
+		{
+			switch (poli[i].result.func)
+			{
+			case '*':
+				stack_p[stack_p.size() - 2] = stack_p[stack_p.size() - 2] * stack_p[stack_p.size() - 1];
+				stack_p.pop_back();
+				break;
+			case '/':
+				stack_p[stack_p.size() - 2] = stack_p[stack_p.size() - 2] / stack_p[stack_p.size() - 1];
+				stack_p.pop_back();
+				break;
+			case '+':
+				stack_p[stack_p.size() - 2] = stack_p[stack_p.size() - 2] + stack_p[stack_p.size() - 1];
+				stack_p.pop_back();
+				break;
+			case '-':
+				stack_p[stack_p.size() - 2] = stack_p[stack_p.size() - 2] - stack_p[stack_p.size() - 1];
+				stack_p.pop_back();
+				break;
+			}
+		}
+	}
+	return stack_p[0];
 }

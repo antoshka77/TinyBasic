@@ -1,6 +1,6 @@
 10 PRINT "ADFASDF"
 20 INPUT A;D;G;F
-30 20 + 2
+30 (20+2) * 5 / 11 + (A - 2 * (2 + 2))
 40 IF ... THEN ...
 50 GOTO 60
 60 GOSUB 50
