@@ -27,8 +27,16 @@ typedef enum Errors
 	INVALID_NAME_OF_VARIABLE, 
 	SYNTAX_ERROR,
 	UNDEFINED_VARIABLE,
-	GOTO_ERROR
+	GOTO_ERROR,
+	GOSUB_ERROR,
+	RETURN_ERROR
 }Errors;
+
+typedef struct Error
+{
+	Errors code;
+	int numOfStr;
+}Error;
 
 typedef struct Str
 {
@@ -67,9 +75,17 @@ private:
 	void InputInterpretation(string expression);
 	void PrintInterpretation(string expression);
 	void GoToInterpretation(string expression);
+	void GoSubInterpretation(string expression);
+	int IfInterpretation(string expression);
+	void RerurnInterpretation();
+	void DefaultInterpetation(string expression);
+	void PrintErrors();
 	void IsAlphabet(char* str);
-	Errors error = SUCCESS;
+	vector <Error> err;
+	Errors error;
+	Error el;
 	int numOfCurLine;
+	int numOfGoSub;
 
 	vector <polish_t> poli;
 	polish_t curElem;

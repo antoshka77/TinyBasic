@@ -9,40 +9,43 @@ istream& operator >> (istream& is, Str& string)
 	{
 		new_el.expression.erase(0, 1);
 		new_el.statement = DEFAULT;
-		if (int pos = new_el.expression.find("PRINT") != -1)
-		{
-			new_el.statement = PRINT;
-			new_el.expression.erase(pos-1, 6);
-		}
-		if (int pos = new_el.expression.find("INPUT") != -1)
-		{
-			new_el.statement = INPUT;
-			new_el.expression.erase(pos - 1, 6);
-		}
 		if (int pos = new_el.expression.find("IF") != -1)
 		{
 			new_el.statement = IF;
 			new_el.expression.erase(pos - 1, 3);
 		}
-		if (int pos = new_el.expression.find("GOTO") != -1)
+		else
 		{
-			new_el.statement = GOTO;
-			new_el.expression.erase(pos - 1, 5);
-		}
-		if (int pos = new_el.expression.find("GOSUB") != -1)
-		{
-			new_el.statement = GOSUB;
-			new_el.expression.erase(pos - 1, 6);
-		}
-		if (int pos = new_el.expression.find("RETURN") != -1)
-		{
-			new_el.statement = RETURN;
-			new_el.expression.erase(pos - 1, 7);
-		}
-		if (int pos = new_el.expression.find("END") != -1)
-		{
-			new_el.statement = END;
-			new_el.expression.erase(pos - 1, 4);
+			if (int pos = new_el.expression.find("PRINT") != -1)
+			{
+				new_el.statement = PRINT;
+				new_el.expression.erase(pos - 1, 6);
+			}
+			if (int pos = new_el.expression.find("INPUT") != -1)
+			{
+				new_el.statement = INPUT;
+				new_el.expression.erase(pos - 1, 6);
+			}
+			if (int pos = new_el.expression.find("GOTO") != -1)
+			{
+				new_el.statement = GOTO;
+				new_el.expression.erase(pos - 1, 5);
+			}
+			if (int pos = new_el.expression.find("GOSUB") != -1)
+			{
+				new_el.statement = GOSUB;
+				new_el.expression.erase(pos - 1, 6);
+			}
+			if (int pos = new_el.expression.find("RETURN") != -1)
+			{
+				new_el.statement = RETURN;
+				new_el.expression.erase(pos - 1, 7);
+			}
+			if (int pos = new_el.expression.find("END") != -1)
+			{
+				new_el.statement = END;
+				new_el.expression.erase(pos - 1, 4);
+			}
 		}
 		string = new_el;
 	}
@@ -143,15 +146,17 @@ void Code::InputInterpretation(string expression)//после строки обязательно ; и 
 			}
 			else
 			{
-				cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": NOT FOUND END OF STRING" << endl;
-				error = NOT_FOUND_END_OF_STRING;
+				el.code = NOT_FOUND_END_OF_STRING;
+				el.numOfStr = (numOfCurLine + 1) * 10;
+				err.push_back(el);
 				return;
 			}
 		}
 		if (!(expression.empty()) && (expression[0] != ';') && flagOfString == 1)
 		{
-			error = SYNTAX_ERROR;
-			cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": NOT FOUND ';' AFTER STRING" << endl;
+			el.code = SYNTAX_ERROR;
+			el.numOfStr = (numOfCurLine + 1) * 10;
+			err.push_back(el);
 			return;
 		}
 		if ((expression[0] == ';' && flagOfString <= 1) || (expression[0] <= 'Z' && expression[0] >= 'A'))//может не быть строки-приглашения, а может быть
@@ -172,7 +177,9 @@ void Code::InputInterpretation(string expression)//после строки обязательно ; и 
 			IsAlphabet(buffer);
 			if (error == INVALID_NAME_OF_VARIABLE)
 			{
-				cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": INVALID NAME OF VARIABLE" << endl;
+				el.code = INVALID_NAME_OF_VARIABLE;
+				el.numOfStr = (numOfCurLine + 1) * 10;
+				err.push_back(el);
 				return;
 			}
 			else
@@ -209,22 +216,24 @@ void Code::PrintInterpretation(string expression)
 			}
 			else
 			{
-				cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": NOT FOUND END OF STRING" << endl;
-				error = NOT_FOUND_END_OF_STRING;
+				el.code = NOT_FOUND_END_OF_STRING;
+				el.numOfStr = (numOfCurLine + 1) * 10;
+				err.push_back(el);
 				return;
 			}
 		}
 		if (!(expression.empty()) && (expression[0] != ';') && flagOfString == 1)
 		{
-			error = SYNTAX_ERROR;
-			cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": NOT FOUND ';' AFTER STRING" << endl;
+			el.code = SYNTAX_ERROR;
+			el.numOfStr = (numOfCurLine + 1) * 10;
+			err.push_back(el);
 			return;
 		}
 		if ((expression[0] == ';' && flagOfString <= 1) || (expression[0] <= 'Z' && expression[0] >= 'A'))//может не быть строки-приглашения, а может быть
 		{
 			if (expression[0] == ';')
 				expression.erase(0, 1);
-			pos = expression.find(";");//рассмотри случай когда после переменной идет строка и потеряна ;
+			pos = expression.find(";");
 			if (pos != -1)//если переменная не одна
 			{
 				expression.copy(buffer, pos);
@@ -238,7 +247,9 @@ void Code::PrintInterpretation(string expression)
 			IsAlphabet(buffer);
 			if (error == INVALID_NAME_OF_VARIABLE)
 			{
-				cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": INVALID NAME OF VARIABLE" << endl;
+				el.code = INVALID_NAME_OF_VARIABLE;
+				el.numOfStr = (numOfCurLine + 1) * 10;
+				err.push_back(el);
 				return;
 			}
 			else
@@ -248,8 +259,9 @@ void Code::PrintInterpretation(string expression)
 					cout << vars[curString];
 				else
 				{
-					error = UNDEFINED_VARIABLE;
-					cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": UNDEFINED VARIABLE" << endl;
+					el.code = UNDEFINED_VARIABLE;
+					el.numOfStr = (numOfCurLine + 1) * 10;
+					err.push_back(el);
 					return;
 				}
 				if (pos != -1)//в инпуте можно обработать ошибку связанную с двойными строками таким образом, так как при удалении остается точка с запятой
@@ -269,18 +281,169 @@ void Code::GoToInterpretation(string expression)
 	int curLine = atoi(buf);
 	if (line.size() * 10 < curLine || curLine < 0 || curLine % 10 != 0)
 	{
-		error = GOTO_ERROR;
-		cout << "ERROR IN LINE " << (numOfCurLine + 1) * 10 << ": UNDEFINED NUMBER OF STRING" << endl;
+		el.code = GOTO_ERROR;
+		el.numOfStr = (numOfCurLine + 1) * 10;
+		err.push_back(el);
 		return;
 	}
 	else
 		numOfCurLine = int(curLine / 10 - 1); 
 }
 
+void Code::GoSubInterpretation(string expression)
+{
+	char buf[20];
+	expression.copy(buf, expression.size());
+	buf[expression.size()] = '\0';
+	int curLine = atoi(buf);
+	numOfGoSub = numOfCurLine;
+	if (line.size() * 10 < curLine || curLine < 0 || curLine % 10 != 0)
+	{
+		el.code = GOSUB_ERROR;
+		el.numOfStr = (numOfCurLine + 1) * 10;
+		err.push_back(el);
+		return;
+	}
+	else
+		numOfCurLine = int(curLine / 10 - 1);
+}
+
+int Code::IfInterpretation(string expression)//считаем что в выражениях нет пробелов
+{
+	int pos[6];
+	int i;
+	pos[0] = expression.find("<=");
+	pos[1] = expression.find("<>");
+	pos[2] = expression.find(">=");
+	pos[3] = expression.find("<");
+	pos[4] = expression.find("=");
+	pos[5] = expression.find(">");
+	for (i = 0; i < 6; i++)
+	{
+		if (pos[i] != -1)
+			break;
+	}
+	string buf_1(expression.begin(), expression.begin() + pos[i]);
+	ReversePolishEntry(buf_1);
+	int res_1 = EvaluatePolish();
+	if (i > 0 && i < 3)
+		pos[i] += 2;
+	else
+		pos[i] += 1;
+	int pos_th = expression.find("THEN");
+	string buf_2(expression.begin() + pos[i], expression.begin() + pos_th);
+	ReversePolishEntry(buf_2);
+	int res_2 = EvaluatePolish();
+	switch (i)
+	{
+	case 0:
+		return (res_1 <= res_2) ? 1 : 0;
+	case 1:
+		return (res_1 != res_2) ? 1 : 0;
+	case 2:
+		return (res_1 >= res_2) ? 1 : 0;
+	case 3:
+		return (res_1 < res_2) ? 1 : 0;
+	case 4:
+		return (res_1 == res_2) ? 1 : 0;
+	case 5:
+		return (res_1 > res_2) ? 1 : 0;
+	}
+}
+
+void Code::RerurnInterpretation()
+{
+	if (numOfGoSub != 0)
+	{
+		numOfCurLine = numOfGoSub;
+		numOfGoSub = 0;
+		return;
+	}
+	else
+	{
+		el.code = RETURN_ERROR;
+		el.numOfStr = (numOfCurLine + 1) * 10;
+		err.push_back(el);
+		return;
+	}
+}
+
+void Code::PrintErrors()
+{
+	for (int i = 0; i < err.size(); i++)
+	{
+		switch (err[i].code)
+		{
+		case NOT_FOUND_END_OF_STRING:
+		{
+			cout << "ERROR IN LINE " << err[i].numOfStr << ": NOT FOUND END OF STRING" << endl;
+			break;
+		}
+		case INVALID_NAME_OF_VARIABLE:
+		{
+			cout << "ERROR IN LINE " << err[i].numOfStr << ": INVALID NAME OF VARIABLE" << endl;
+			break;
+		}
+		case SYNTAX_ERROR:
+		{
+			cout << "ERROR IN LINE " << err[i].numOfStr << ": NOT FOUND ';' AFTER STRING" << endl;
+			break;
+		}
+		case UNDEFINED_VARIABLE:
+		{
+			cout << "ERROR IN LINE " << err[i].numOfStr << ": UNDEFINED VARIABLE" << endl;
+			break;
+		}
+		case GOTO_ERROR:
+		{
+			cout << "ERROR IN LINE " << err[i].numOfStr << ": UNDEFINED NUMBER OF STRING" << endl;
+			break;
+		}
+		case GOSUB_ERROR:
+		{
+			cout << "ERROR IN LINE " << err[i].numOfStr << ": UNDEFINED NUMBER OF STRING" << endl;
+			break;
+		}
+		case RETURN_ERROR:
+		{
+			cout << "ERROR IN LINE " << err[i].numOfStr << ": YOU HAVEN'T GOSUB FOR THIS RETURN" << endl;
+			break;
+		}
+		}
+	}
+}
+
+void Code::DefaultInterpetation(string expression)
+{
+	while (!expression.empty())
+	{
+		int pos = expression.find("=");
+		string var(expression, 0, pos);
+		expression.erase(0, pos + 1);
+		pos = expression.find(":");
+		if (pos != -1)
+		{
+			string buf(expression, 0, pos);
+			ReversePolishEntry(buf);
+			vars[var] = EvaluatePolish();
+			varsInit[var] = 1;
+			expression.erase(0, pos + 1);
+		}
+		else
+		{
+			ReversePolishEntry(expression);
+			vars[var] = EvaluatePolish();
+			varsInit[var] = 1;
+			expression.clear();
+		}
+	}
+}
+
 void Code::Interpretation()
 {
 	string curString;
 	numOfCurLine = 0;
+	int flag = 0;
 	while (line[numOfCurLine].statement != END)
 	{
 		curString = line[numOfCurLine].expression; //чтобы не портить исходные строки в процессе интерпретации
@@ -301,7 +464,53 @@ void Code::Interpretation()
 		}
 		case IF:
 		{
-			numOfCurLine++;
+			if (IfInterpretation(curString) == 1)
+			{
+				int pos = curString.find("THEN") + 5;
+				curString.erase(0, pos);
+				if (pos = curString.find("PRINT") != -1)
+				{
+					curString.erase(pos - 1, 6);
+					PrintInterpretation(curString);
+					cout << endl;
+					flag++;
+				}
+				if (pos = curString.find("INPUT") != -1)
+				{
+					curString.erase(pos - 1, 6);
+					InputInterpretation(curString);
+					flag++;
+				}
+				if (pos = curString.find("GOTO") != -1)
+				{
+					curString.erase(pos - 1, 5);
+					GoToInterpretation(curString);
+					flag++;
+				}
+				if (pos = curString.find("GOSUB") != -1)
+				{
+					curString.erase(pos - 1, 6);
+					GoSubInterpretation(curString);
+					flag++;
+				}
+				if (pos = curString.find("RETURN") != -1)
+				{
+					curString.erase(pos - 1, 7);
+					flag++;
+				}
+				if (pos = curString.find("END") != -1)
+				{
+					curString.erase(pos - 1, 4);
+					flag++;
+					exit;
+				}
+				if (flag == 0)
+				{
+					ReversePolishEntry(curString);
+					cout << EvaluatePolish() << endl;
+				}
+			}
+			flag = 0;
 			break;
 		}
 		case GOTO:
@@ -311,23 +520,24 @@ void Code::Interpretation()
 		}
 		case GOSUB:
 		{
-			numOfCurLine++;
+			GoSubInterpretation(curString);
 			break;
 		}
 		case RETURN:
 		{
+			RerurnInterpretation();
 			numOfCurLine++;
 			break;
 		}
 		default:
 		{
-			ReversePolishEntry(curString);
-			cout << EvaluatePolish() << endl;
+			DefaultInterpetation(curString);
 			numOfCurLine++;
 			break;
 		}
 		}
 	}
+	PrintErrors();
 }
 
 int Code::IsItNum(char symb)
@@ -410,6 +620,9 @@ void Code::ReversePolishEntry(string mystring)
 	int flag = 1;
 	string nullstr = "0";
 	int shift = mystring.size();
+	stack_p.clear();
+	stack.clear();
+	poli.clear();
 	while (shift != -1)
 	{
 		if (IsItNum(mystring[i]) == 1 || IsItSymb(mystring[i]) == 1)
