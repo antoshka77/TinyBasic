@@ -279,7 +279,7 @@ void Code::GoToInterpretation(string expression)
 	expression.copy(buf, expression.size());
 	buf[expression.size()] = '\0';
 	int curLine = atoi(buf);
-	if (line.size() * 10 < curLine || curLine < 0 || curLine % 10 != 0)
+	if (int(line.size() * 10) < curLine || curLine < 0 || curLine % 10 != 0)
 	{
 		el.code = GOTO_ERROR;
 		el.numOfStr = (numOfCurLine + 1) * 10;
@@ -297,7 +297,7 @@ void Code::GoSubInterpretation(string expression)
 	buf[expression.size()] = '\0';
 	int curLine = atoi(buf);
 	numOfGoSub = numOfCurLine;
-	if (line.size() * 10 < curLine || curLine < 0 || curLine % 10 != 0)
+	if (int(line.size() * 10) < curLine || curLine < 0 || curLine % 10 != 0)
 	{
 		el.code = GOSUB_ERROR;
 		el.numOfStr = (numOfCurLine + 1) * 10;
@@ -348,6 +348,8 @@ int Code::IfInterpretation(string expression)//считаем что в выражениях нет проб
 		return (res_1 == res_2) ? 1 : 0;
 	case 5:
 		return (res_1 > res_2) ? 1 : 0;
+	default: 
+		return 0;
 	}
 }
 
@@ -370,7 +372,7 @@ void Code::RerurnInterpretation()
 
 void Code::PrintErrors()
 {
-	for (int i = 0; i < err.size(); i++)
+	for (int i = 0; i < int(err.size()); i++)
 	{
 		switch (err[i].code)
 		{
@@ -474,12 +476,14 @@ void Code::Interpretation()
 					PrintInterpretation(curString);
 					cout << endl;
 					flag++;
+					numOfCurLine++;
 				}
 				if (pos = curString.find("INPUT") != -1)
 				{
 					curString.erase(pos - 1, 6);
 					InputInterpretation(curString);
 					flag++;
+					numOfCurLine++;
 				}
 				if (pos = curString.find("GOTO") != -1)
 				{
@@ -497,17 +501,18 @@ void Code::Interpretation()
 				{
 					curString.erase(pos - 1, 7);
 					flag++;
+					numOfCurLine++;
 				}
 				if (pos = curString.find("END") != -1)
 				{
 					curString.erase(pos - 1, 4);
 					flag++;
-					exit;
+					exit(0);
 				}
 				if (flag == 0)
 				{
-					ReversePolishEntry(curString);
-					cout << EvaluatePolish() << endl;
+					DefaultInterpetation(curString);
+					numOfCurLine++;
 				}
 			}
 			flag = 0;
@@ -559,7 +564,7 @@ int Code::atoi(string str)
 {
 	int num = 0;
 	int flag = 0;
-	for (int i = 0; i < str.length(); i++)
+	for (int i = 0; i < int(str.length()); i++)
 		num = num * 10 + str[i] - 0x30;
 	return num;
 }
@@ -584,7 +589,7 @@ int Priority(char symb)
 int Code::IsAlphabet(string str)//все переменные - комбинации с большой буквы
 {
 	int flag = 1;
-	for (int i = 0; i < str.size(); i++)
+	for (int i = 0; i < int(str.size()); i++)
 	{
 		if (str[i] > 'Z' || str[i] < 'A')
 		{
@@ -599,7 +604,7 @@ int Code::IsAlphabet(string str)//все переменные - комбинации с большой буквы
 int Code::IsNumber(string str)
 {
 	int flag = 1;
-	for (int i = 0; i < str.size(); i++)
+	for (int i = 0; i < int(str.size()); i++)
 	{
 		if (str[i] > '9' || str[i] < '0')
 		{
@@ -714,7 +719,7 @@ int Code::EvaluatePolish()
 		cout << "ERROR OF EVALUATE" << endl;
 		return -1;
 	}
-	for (int i = 0; i < poli.size(); i++)
+	for (int i = 0; i < int(poli.size()); i++)
 	{
 		if (poli[i].type == number)
 			stack_p.push_back(poli[i].result.number);

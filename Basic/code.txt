@@ -1,8 +1,9 @@
 10 PRINT "ADFASDF"
 20 INPUT "ENTER VARIBLES A, D, G, F: ";A;D;G;F
 30 K=(20+2) * 5 / 11 + (A - 2 * (2 + 2))
-40 IF (20+2) * 5 / 11 + (A - 2 * (2 + 2))>=1 THEN GOSUB 60
-50 END
-60 AA=(20+2) * 5:DD=D-G+F
-70 PRINT "AA=";AA;" ";G;" ";DD;" ";K
-80 RETURN
+40 IF (20+2) * 5 / 22>=1 THEN K=((70 / 5) + 16)*2
+50 IF K = 60 THEN PRINT K
+60 END
+70 AA=(20+2) * 5:DD=D-G+F
+80 PRINT "AA=";AA;" ";G;" ";DD;" ";K
+90 RETURN
