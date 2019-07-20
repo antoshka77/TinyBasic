@@ -515,6 +515,8 @@ void Code::Interpretation()
 					numOfCurLine++;
 				}
 			}
+			else
+				numOfCurLine++;
 			flag = 0;
 			break;
 		}
