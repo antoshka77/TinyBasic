@@ -1,7 +1,5 @@
 #include "Basic.h"
 
-ifstream indata("code.txt");
-
 istream& operator >> (istream& is, Str& string)
 {
 	Str new_el;
@@ -41,6 +39,11 @@ istream& operator >> (istream& is, Str& string)
 				new_el.statement = RETURN;
 				new_el.expression.erase(pos - 1, 7);
 			}
+			if (int pos = new_el.expression.find("LET") != -1)
+			{
+				new_el.statement = LET;
+				new_el.expression.erase(pos - 1, 4);
+			}
 			if (int pos = new_el.expression.find("END") != -1)
 			{
 				new_el.statement = END;
@@ -52,58 +55,67 @@ istream& operator >> (istream& is, Str& string)
 	return is;
 }
 
-void Code::GetCode()
+void Code::GetCode(char* indata)
 {
 	Str curElem;
-	while (indata >> curElem)
-		line.push_back(curElem);
+	ifstream in(indata);
+	while (in >> curElem)
+	{
+		line[curElem.number] = curElem;
+		numOfLines.push_back(curElem.number);
+	}
 };
 
 void Code::PrintCode()
 {
-	for (int i = 0; i < (int)line.size(); i++)
+	for (int i = 0; i < (int)numOfLines.size(); i++)
 	{
-		cout << line[i].number << " ";
-		switch(line[i].statement)
+		cout << line[numOfLines[i]].number << " ";
+		switch(line[numOfLines[i]].statement)
 		{
 			case PRINT:
 			{
-				cout << "PRINT " << line[i].expression << endl;
+				cout << "PRINT " << line[numOfLines[i]].expression << endl;
 				break;
 			}
 			case INPUT:
 			{
-				cout << "INPUT " << line[i].expression << endl;
+				cout << "INPUT " << line[numOfLines[i]].expression << endl;
 				break;
 			}
 			case IF:
 			{
-				cout << "IF " << line[i].expression << endl;
+				cout << "IF " << line[numOfLines[i]].expression << endl;
 				break;
 			}
 			case GOTO:
 			{
-				cout << "GOTO " << line[i].expression << endl;
+				cout << "GOTO " << line[numOfLines[i]].expression << endl;
 				break;
 			}
 			case GOSUB:
 			{
-				cout << "GOSUB " << line[i].expression << endl;
+				cout << "GOSUB " << line[numOfLines[i]].expression << endl;
 				break;
 			}
 			case RETURN:
 			{
-				cout << "RETURN" << line[i].expression << endl;
+				cout << "RETURN" << line[numOfLines[i]].expression << endl;
+				break;
+			}
+			case LET:
+			{
+				cout << "LET " << line[numOfLines[i]].expression << endl;
 				break;
 			}
 			case END:
 			{
-				cout << "END" << line[i].expression << endl;
+				cout << "END" << line[numOfLines[i]].expression << endl;
 				break;
 			}
 			default:
 			{
-				cout << line[i].expression << endl;
+				cout << line[numOfLines[i]].expression << endl;
 				break;
 			}
 		}
@@ -147,7 +159,7 @@ void Code::InputInterpretation(string expression)//после строки обязательно ; и 
 			else
 			{
 				el.code = NOT_FOUND_END_OF_STRING;
-				el.numOfStr = (numOfCurLine + 1) * 10;
+				el.numOfStr = line[numOfLines[numOfCurLine]].number;
 				err.push_back(el);
 				return;
 			}
@@ -155,7 +167,7 @@ void Code::InputInterpretation(string expression)//после строки обязательно ; и 
 		if (!(expression.empty()) && (expression[0] != ';') && flagOfString == 1)
 		{
 			el.code = SYNTAX_ERROR;
-			el.numOfStr = (numOfCurLine + 1) * 10;
+			el.numOfStr = line[numOfLines[numOfCurLine]].number;
 			err.push_back(el);
 			return;
 		}
@@ -169,7 +181,7 @@ void Code::InputInterpretation(string expression)//после строки обязательно ; и 
 				expression.copy(buffer, pos);
 				buffer[pos] = '\0';
 			}
-			else
+			else//переменная одна
 			{
 				expression.copy(buffer, expression.size());
 				buffer[expression.size()] = '\0';
@@ -178,14 +190,15 @@ void Code::InputInterpretation(string expression)//после строки обязательно ; и 
 			if (error == INVALID_NAME_OF_VARIABLE)
 			{
 				el.code = INVALID_NAME_OF_VARIABLE;
-				el.numOfStr = (numOfCurLine + 1) * 10;
+				el.numOfStr = line[numOfLines[numOfCurLine]].number;
 				err.push_back(el);
+				error = SUCCESS;
 				return;
 			}
 			else
 			{
 				curString = string(buffer);
-				cin >> vars[curString];
+				cin >> vars[curString];//ввожу значение переменной
 				varsInit[curString] = 1;//переменная создана и проинициализирована
 				expression.erase(0, curString.size());
 			}
@@ -217,7 +230,7 @@ void Code::PrintInterpretation(string expression)
 			else
 			{
 				el.code = NOT_FOUND_END_OF_STRING;
-				el.numOfStr = (numOfCurLine + 1) * 10;
+				el.numOfStr = line[numOfLines[numOfCurLine]].number;
 				err.push_back(el);
 				return;
 			}
@@ -225,7 +238,7 @@ void Code::PrintInterpretation(string expression)
 		if (!(expression.empty()) && (expression[0] != ';') && flagOfString == 1)
 		{
 			el.code = SYNTAX_ERROR;
-			el.numOfStr = (numOfCurLine + 1) * 10;
+			el.numOfStr = line[numOfLines[numOfCurLine]].number;
 			err.push_back(el);
 			return;
 		}
@@ -248,8 +261,9 @@ void Code::PrintInterpretation(string expression)
 			if (error == INVALID_NAME_OF_VARIABLE)
 			{
 				el.code = INVALID_NAME_OF_VARIABLE;
-				el.numOfStr = (numOfCurLine + 1) * 10;
+				el.numOfStr = line[numOfLines[numOfCurLine]].number;
 				err.push_back(el);
+				error = SUCCESS;
 				return;
 			}
 			else
@@ -260,11 +274,11 @@ void Code::PrintInterpretation(string expression)
 				else
 				{
 					el.code = UNDEFINED_VARIABLE;
-					el.numOfStr = (numOfCurLine + 1) * 10;
+					el.numOfStr = line[numOfLines[numOfCurLine]].number;
 					err.push_back(el);
 					return;
 				}
-				if (pos != -1)//в инпуте можно обработать ошибку связанную с двойными строками таким образом, так как при удалении остается точка с запятой
+				if (pos != -1)
 					expression.erase(0, curString.size() + 1);
 				else
 					expression.erase(0, curString.size());
@@ -279,15 +293,14 @@ void Code::GoToInterpretation(string expression)
 	expression.copy(buf, expression.size());
 	buf[expression.size()] = '\0';
 	int curLine = atoi(buf);
-	if (int(line.size() * 10) < curLine || curLine < 0 || curLine % 10 != 0)
+	for (int i = 0; i < int(numOfLines.size()); i++)
 	{
-		el.code = GOTO_ERROR;
-		el.numOfStr = (numOfCurLine + 1) * 10;
-		err.push_back(el);
-		return;
-	}
-	else
-		numOfCurLine = int(curLine / 10 - 1); 
+		if (numOfLines[i] == curLine)
+		{
+			numOfCurLine = i;
+			break;
+		}
+	} 
 }
 
 void Code::GoSubInterpretation(string expression)
@@ -297,15 +310,14 @@ void Code::GoSubInterpretation(string expression)
 	buf[expression.size()] = '\0';
 	int curLine = atoi(buf);
 	numOfGoSub = numOfCurLine;
-	if (int(line.size() * 10) < curLine || curLine < 0 || curLine % 10 != 0)
+	for (int i = 0; i < int(numOfLines.size()); i++)
 	{
-		el.code = GOSUB_ERROR;
-		el.numOfStr = (numOfCurLine + 1) * 10;
-		err.push_back(el);
-		return;
+		if (numOfLines[i] == curLine)
+		{
+			numOfCurLine = i;
+			break;
+		}
 	}
-	else
-		numOfCurLine = int(curLine / 10 - 1);
 }
 
 int Code::IfInterpretation(string expression)//считаем что в выражениях нет пробелов
@@ -326,12 +338,12 @@ int Code::IfInterpretation(string expression)//считаем что в выражениях нет проб
 	string buf_1(expression.begin(), expression.begin() + pos[i]);
 	ReversePolishEntry(buf_1);
 	int res_1 = EvaluatePolish();
-	if (i > 0 && i < 3)
+	if (i >= 0 && i < 3)
 		pos[i] += 2;
 	else
 		pos[i] += 1;
 	int pos_th = expression.find("THEN");
-	string buf_2(expression.begin() + pos[i], expression.begin() + pos_th);
+	string buf_2(expression.begin() + pos[i], expression.begin() + pos_th - 1);
 	ReversePolishEntry(buf_2);
 	int res_2 = EvaluatePolish();
 	switch (i)
@@ -364,7 +376,7 @@ void Code::RerurnInterpretation()
 	else
 	{
 		el.code = RETURN_ERROR;
-		el.numOfStr = (numOfCurLine + 1) * 10;
+		el.numOfStr = line[numOfLines[numOfCurLine]].number;
 		err.push_back(el);
 		return;
 	}
@@ -372,6 +384,7 @@ void Code::RerurnInterpretation()
 
 void Code::PrintErrors()
 {
+	cout << endl;
 	for (int i = 0; i < int(err.size()); i++)
 	{
 		switch (err[i].code)
@@ -411,6 +424,16 @@ void Code::PrintErrors()
 			cout << "ERROR IN LINE " << err[i].numOfStr << ": YOU HAVEN'T GOSUB FOR THIS RETURN" << endl;
 			break;
 		}
+		case ERROR_OF_EVALUATE:
+		{
+			cout << "ERROR IN LINE " << err[i].numOfStr << ": ERROR OF EVALUATE" << endl;
+			break;
+		}
+		case ERROR_OF_EXPRESSION:
+		{
+			cout << "ERROR IN LINE " << err[i].numOfStr << ": UNKNOWN SYMBOL IN MATH EXPRESSION" << endl;
+			break;
+		}
 		}
 	}
 }
@@ -428,14 +451,20 @@ void Code::DefaultInterpetation(string expression)
 			string buf(expression, 0, pos);
 			ReversePolishEntry(buf);
 			vars[var] = EvaluatePolish();
-			varsInit[var] = 1;
+			if (flagOfEvaluate == 0 && varsInit[var] == 1 || flagOfLet == 0 || varsInit[var] == 1)
+				varsInit[var] = 1;
+			else
+				varsInit[var] = 0;
 			expression.erase(0, pos + 1);
 		}
 		else
 		{
 			ReversePolishEntry(expression);
 			vars[var] = EvaluatePolish();
-			varsInit[var] = 1;
+			if (flagOfEvaluate == 0 && varsInit[var] == 1 || flagOfLet == 0 || varsInit[var] == 1)
+				varsInit[var] = 1;
+			else
+				varsInit[var] = 0;
 			expression.clear();
 		}
 	}
@@ -445,11 +474,12 @@ void Code::Interpretation()
 {
 	string curString;
 	numOfCurLine = 0;
-	int flag = 0;
-	while (line[numOfCurLine].statement != END)
+	int flag = 0;//дефолтное состояние для if
+	while (line[numOfLines[numOfCurLine]].statement != END)
 	{
-		curString = line[numOfCurLine].expression; //чтобы не портить исходные строки в процессе интерпретации
-		switch (line[numOfCurLine].statement)
+		flagOfLet = 1;
+		curString = line[numOfLines[numOfCurLine]].expression; //чтобы не портить исходные строки в процессе интерпретации
+		switch (line[numOfLines[numOfCurLine]].statement)
 		{
 		case PRINT:
 		{
@@ -503,6 +533,12 @@ void Code::Interpretation()
 					flag++;
 					numOfCurLine++;
 				}
+				if (pos = curString.find("LET") != -1)
+				{
+					curString.erase(pos - 1, 4);
+					DefaultInterpetation(curString);
+					flag++;
+				}
 				if (pos = curString.find("END") != -1)
 				{
 					curString.erase(pos - 1, 4);
@@ -533,6 +569,13 @@ void Code::Interpretation()
 		case RETURN:
 		{
 			RerurnInterpretation();
+			numOfCurLine++;
+			break;
+		}
+		case LET:
+		{
+			flagOfLet = 0;
+			DefaultInterpetation(curString);
 			numOfCurLine++;
 			break;
 		}
@@ -632,6 +675,14 @@ void Code::ReversePolishEntry(string mystring)
 	poli.clear();
 	while (shift != -1)
 	{
+		if (IsItNum(mystring[i]) == 0 && IsItSymb(mystring[i]) == 0 && IsItFunc(mystring[i]) == 0 && mystring[i] != ')' && mystring[i] != '(' && shift != 0)
+		{
+			el.code = ERROR_OF_EXPRESSION;
+			el.numOfStr = line[numOfLines[numOfCurLine]].number;
+			err.push_back(el);
+			error = ERROR_OF_EXPRESSION;
+			return;
+		}
 		if (IsItNum(mystring[i]) == 1 || IsItSymb(mystring[i]) == 1)
 		{
 			countBuf++;
@@ -652,6 +703,9 @@ void Code::ReversePolishEntry(string mystring)
 					else
 					{
 						error = UNDEFINED_VARIABLE;
+						el.code = UNDEFINED_VARIABLE;
+						el.numOfStr = line[numOfLines[numOfCurLine]].number;
+						err.push_back(el);
 						return;
 					}
 				}
@@ -666,6 +720,9 @@ void Code::ReversePolishEntry(string mystring)
 					else
 					{
 						error = INVALID_NAME_OF_VARIABLE;
+						el.code = INVALID_NAME_OF_VARIABLE;
+						el.numOfStr = line[numOfLines[numOfCurLine]].number;
+						err.push_back(el);
 						return;
 					}
 				}
@@ -716,9 +773,14 @@ void Code::ReversePolishEntry(string mystring)
 
 int Code::EvaluatePolish()
 {
+	flagOfEvaluate = 0;
 	if (error != SUCCESS)
 	{
-		cout << "ERROR OF EVALUATE" << endl;
+		flagOfEvaluate = 1;
+		el.code = ERROR_OF_EVALUATE;
+		el.numOfStr = line[numOfLines[numOfCurLine]].number;
+		err.push_back(el);
+		error = SUCCESS;
 		return -1;
 	}
 	for (int i = 0; i < int(poli.size()); i++)
